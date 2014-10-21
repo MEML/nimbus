@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+	<style type="text/css">
+		body {
+			background-color: black;
+		}
+	</style>
+</head>
+<body>
+<canvas id='c' width='1024' height='768'></canvas>
+<script type="text/javascript">
+	var CONSTANTS = {
+		width: 1024,
+		height: 768,
+		invertFacing: true
+	};
+	var REFS = {
+		onscreenContext : null,
+		offscreenContext : null
+	};
+	var nodes = {};
+
+	var c = document.getElementById('c');
+	REFS.onscreenContext = c.getContext('2d')
+
+	// here we create an OFFSCREEN canvas
+    var offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = CONSTANTS.width;
+    offscreenCanvas.height = CONSTANTS.height;
+    REFS.offscreenContext = offscreenCanvas.getContext('2d');
+
+	function clear() {
+		REFS.offscreenContext.clearRect(0, 0, CONSTANTS.width, CONSTANTS.height);
+	}
+
+    function flush() {
+        var image = REFS.offscreenContext.getImageData(0,0,CONSTANTS.width,CONSTANTS.height);
+        window.magic = image;
+        REFS.onscreenContext.putImageData(image, 0, 0);
+    }
+
+    function printNode(node, t) {
+    	REFS.offscreenContext.font = node.size + "pt Montserrat";
+    	var timeSinceStart = t - node.startTime;
+    	var timeUntilEnd = node.endTime - t;
+    	var intensity;
+    	if (timeUntilEnd > 2000) {
+    		intensity = Math.min((timeSinceStart)/2000, 1);
+    	} else {
+    		intensity = Math.min((timeUntilEnd)/2000, 1);
+    	}
+    	REFS.offscreenContext.fillStyle = 'rgba(255,255,255,'+intensity+')';
+		var x = CONSTANTS.width/2;
+		var y = CONSTANTS.height/2;
+
+		REFS.offscreenContext.save();
+		REFS.offscreenContext.translate(x, y);
+		REFS.offscreenContext.rotate(node.rotation);
+
+		REFS.offscreenContext.textAlign = 'center';
+		REFS.offscreenContext.fillText(node.text, 0, (CONSTANTS.invertFacing? -1 : 1) * node.distFromCenter);
+
+		REFS.offscreenContext.restore();
+
+		//REFS.offscreenContext.fillStyle = 'red';
+		//REFS.offscreenContext.fillRect(x, y, 10, 10);
+    }
+
+    function addNode (text) {
+    	var initialDuration = 10000;
+    	var node;
+    	var now = new Date().getTime();
+    	if (nodes.hasOwnProperty(text) && (nodes[text].endTime > now)) {
+    		// Already exists
+    		node = nodes[text];
+    		node.newGrowth = node.size * 1.1 - node.size;
+    		node.endTime += 5000;
+    	} else {
+    		node = {
+    			newGrowth: 15,
+	    		text: text,
+	    		size: 1,
+	    		startTime: now,
+	    		endTime: now + initialDuration,
+	    		rotation: Math.PI * 2 * Math.random(),
+	    		distFromCenter: 0,
+	    		speed: 0.0005 + Math.random() * 0.0001
+    		};
+    	}
+    	nodes[text] = node;
+    }
+
+    function simulateNode (node, dt, t) {
+    	var maxDist = 350;
+    	if (node.newGrowth > 0) {
+    		var diff = Math.min(dt * 0.01, node.newGrowth);
+    		node.newGrowth -= diff;
+    		node.size += diff;
+    	}
+    	node.rotation += node.speed * dt;
+    	node.distFromCenter = Math.min((t - node.startTime)/5000 * maxDist, maxDist);
+    }
+
+    function _removeNode (text) {
+    	if (nodes.hasOwnProperty(text)) {
+    		// Already exists
+    		delete nodes[text];
+    	}
+    }
+
+    var testWords = ["Innovation", "MEML", "Environments", "Experiences", "Design Thinking"];
+    setInterval(function () {var w = testWords[Math.floor(Math.random()*testWords.length)];
+    	addNode(w);}, 2000)
+
+    var time = new Date().getTime();
+	function draw() {
+	    requestAnimationFrame(draw);
+	    var now = new Date().getTime(),
+	        dt = now - (time || now);
+
+		clear();
+
+		for (var n in nodes) {
+			if (nodes.hasOwnProperty(n)) {
+				var node = nodes[n];
+				printNode(node, time);
+				simulateNode(node, dt, time);
+			}
+		}
+
+	    flush();
+
+	    time = now;
+	}
+
+	draw();
+
+</script>
+</body>
+</html>
