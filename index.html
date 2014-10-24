@@ -77,7 +77,7 @@
     		// Already exists
     		node = nodes[text];
     		node.newGrowth = node.size * 1.1 - node.size;
-    		node.endTime += 5000;
+    		node.endTime += 9000;
     	} else {
     		node = {
     			newGrowth: 15,
@@ -87,7 +87,7 @@
 	    		endTime: now + initialDuration,
 	    		rotation: Math.PI * 2 * Math.random(),
 	    		distFromCenter: 0,
-	    		speed: 0.0005 + Math.random() * 0.0001
+	    		speed: 0.00002 + Math.random() * 0.0003
     		};
     	}
     	nodes[text] = node;
@@ -101,7 +101,7 @@
     		node.size += diff;
     	}
     	node.rotation += node.speed * dt;
-    	node.distFromCenter = Math.min((t - node.startTime)/5000 * maxDist, maxDist);
+    	node.distFromCenter = Math.min((t - node.startTime)/9000 * maxDist, maxDist);
     }
 
     function _removeNode (text) {
@@ -111,9 +111,9 @@
     	}
     }
 
-    var testWords = ["Innovation", "MEML", "Environments", "Experiences", "Design Thinking"];
-    setInterval(function () {var w = testWords[Math.floor(Math.random()*testWords.length)];
-    	addNode(w);}, 2000)
+    // var testWords = ["Innovation", "MEML", "Environments", "Experiences", "Design Thinking"];
+    // setInterval(function () {var w = testWords[Math.floor(Math.random()*testWords.length)];
+    // 	addNode(w);}, 2000)
 
     var time = new Date().getTime();
 	function draw() {
